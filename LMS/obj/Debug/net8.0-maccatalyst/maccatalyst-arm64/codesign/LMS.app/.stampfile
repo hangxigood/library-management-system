@@ -1,0 +1,1 @@
+-v --force --timestamp=none --sign - --entitlements /Users/xianghangxi/Github/LibarayManagementSystem/LMS/obj/Debug/net8.0-maccatalyst/maccatalyst-arm64/Entitlements.xcent /Users/xianghangxi/Github/LibarayManagementSystem/LMS/bin/Debug/net8.0-maccatalyst/maccatalyst-arm64/LMS.app

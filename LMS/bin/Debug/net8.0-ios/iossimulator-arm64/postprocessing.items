@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <_PostProcessingItem Include="LMS.app/LMS">
+      <BCSymbolMapName>LMS.bcsymbolmap</BCSymbolMapName>
+      <NoDSymUtil>true</NoDSymUtil>
+      <dSYMSourcePathExists>false</dSYMSourcePathExists>
+      <NoSymbolStrip>true</NoSymbolStrip>
+      <dSYMInfoPlistRelativePath>LMS.app.dSYM\Contents\Info.plist</dSYMInfoPlistRelativePath>
+      <SymbolFile>/Users/xianghangxi/Github/LibarayManagementSystem/LMS/obj/Debug/net8.0-ios/iossimulator-arm64/mtouch-symbols.list</SymbolFile>
+      <DSymName>LMS.app.dSYM</DSymName>
+      <SourceProjectPath>/Users/xianghangxi/Github/LibarayManagementSystem/LMS</SourceProjectPath>
+    </_PostProcessingItem>
+  </ItemGroup>
+</Project>

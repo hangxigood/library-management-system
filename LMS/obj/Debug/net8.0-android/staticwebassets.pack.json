@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/obj/Debug/net8.0-android/scopedcss/bundle/LMS.styles.css",
+      "PackagePath": "staticwebassets/LMS.styles.css"
+    },
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/wwwroot/css/app.css",
+      "PackagePath": "staticwebassets/css/app.css"
+    },
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/wwwroot/css/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/wwwroot/css/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/css/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "/Users/xianghangxi/Github/LibarayManagementSystem/LMS/wwwroot/index.html",
+      "PackagePath": "staticwebassets/index.html"
+    },
+    {
+      "Id": "obj/Debug/net8.0-android/staticwebassets/msbuild.LMS.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-android/staticwebassets/msbuild.build.LMS.props",
+      "PackagePath": "build\\LMS.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-android/staticwebassets/msbuild.buildMultiTargeting.LMS.props",
+      "PackagePath": "buildMultiTargeting\\LMS.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0-android/staticwebassets/msbuild.buildTransitive.LMS.props",
+      "PackagePath": "buildTransitive\\LMS.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

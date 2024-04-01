@@ -1,0 +1,24 @@
+﻿@page "/counter"
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+        var databasePath = Path.Combine(FileSystem.AppDataDirectory, "Library.db");
+		Console.WriteLine(databasePath);
+		var database = new LibraryDatabase(databasePath);
+		// Example: Adding a new book
+		var newBook = new Book { Title = "New Book", Author = "Author Name", YearPublished = 2021, IsAvailable = true };
+		database.SaveBookAsync(newBook);
+        var bookt = database.GetBookAsync(1);
+        Console.WriteLine(bookt.ToString());
+    }
+}
