@@ -1,0 +1,36 @@
+@page "/editbook/{id}"
+@inject LibraryDatabase LibraryDatabase
+
+<h3>Edit Book</h3>
+
+@if (Book != null)
+{
+    <EditForm Model="@Book" OnValidSubmit="@UpdateBook">
+        <InputText @bind-Value="Book.Title" />
+        <InputText @bind-Value="Book.Author" />
+        <InputNumber @bind-Value="Book.YearPublished" />
+        <input type="checkbox" @bind="@Book.IsAvailable" />
+        <button type="submit">Update Book</button>
+    </EditForm>
+}
+else
+{
+    <p>Book not found.</p>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    Book Book;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Book = await LibraryDatabase.GetBookAsync(Id);
+    }
+
+    private async Task UpdateBook()
+    {
+        await LibraryDatabase.SaveBookAsync(Book);
+    }
+}

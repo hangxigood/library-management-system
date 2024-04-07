@@ -1,0 +1,32 @@
+@page "/searchbooks"
+@using LMS
+@inject LibraryDatabase libraryDatabase
+
+<h3>Search for Books</h3>
+
+<input @bind-value="searchText" />
+<button @onclick="SearchForBooks">Search</button>
+
+@if (books != null)
+{
+    <ul>
+        @foreach (var b in books)
+        {
+            <li>@b.Title by @b.Author</li>
+        }
+    </ul>
+}
+
+@code {
+    List<Book> books;
+    string searchText;
+
+    async Task SearchForBooks()
+    {
+        books = await libraryDatabase.GetBooksAsync();
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            books = books.Where(b => b.Title.Contains(searchText) || b.Author.Contains(searchText)).ToList();
+        }
+    }
+}
