@@ -1,0 +1,29 @@
+﻿@page "/memberdetails/{MemberId}"
+@inject IMemberService MemberService
+
+<PageTitle>Member Details</PageTitle>
+
+@if (Member != null)
+{
+    <StackLayout Padding="30">
+        <Label Text="@($"Name: {Member.Name}")" FontSize="Medium" />
+        <Label Text="@($"Email: {Member.Email}")" FontSize="Medium" />
+        <!-- Display additional member details here -->
+    </StackLayout>
+}
+else
+{
+    <Label Text="Member not found."/>
+}
+
+@code {
+    [Parameter]
+    public int MemberId { get; set; }
+
+    private Member Member { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Member = MemberService.GetMemberDetails(MemberId);
+    }
+}

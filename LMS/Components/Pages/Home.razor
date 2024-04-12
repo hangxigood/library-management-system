@@ -1,0 +1,35 @@
+﻿@page "/"
+@inject IBookService BookService
+@inject IAdminService AdminService
+
+<h4>Books List</h4>
+<InputText @bind-Value="searchQuery" placeholder="Search books..." />
+@if (booksList != null && booksList.Any())
+{
+    <table>
+        <thead>
+            <tr><th>Title</th><th>Author</th><th>ISBN</th><th>TotalCopies</th><th>AvailableCopies</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var book in filteredBooksList)
+        {
+            <tr><td>@book.Title</td><td>@book.Author</td><td>@book.ISBN</td><td>@book.TotalCopies</td><td>@book.AvailableCopies</td></tr>
+        }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No books available.</p>
+}
+
+@code {
+    private List<Book> booksList = new List<Book>();
+    private List<Book> filteredBooksList => booksList.Where(b => b.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(searchQuery)).ToList();
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        booksList = await AdminService.GetBooksAsync(); // Ensure this method is implemented to fetch books
+    }
+}
