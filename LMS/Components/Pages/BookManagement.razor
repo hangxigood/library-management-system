@@ -1,33 +1,13 @@
 ﻿@page "/"
 @inject IBookService BookService
 
-<h4>Add New Book</h4>
-<EditForm Model="@newBook" OnValidSubmit="AddBook">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="form-group">
-        <label for="title">Title:</label>
-        <InputText id="title" class="form-control" @bind-Value="newBook.Title" />
-    </div>
-    <div class="form-group">
-        <label for="author">Author:</label>
-        <InputText id="author" class="form-control" @bind-Value="newBook.Author" />
-    </div>
-    <div class="form-group">
-        <label for="isbn">ISBN:</label>
-        <InputText id="isbn" class="form-control" @bind-Value="newBook.ISBN" />
-    </div>
-    <button type="submit" class="btn btn-primary">Add Book</button>
-</EditForm>
-
-<h4>Update/Delete Book</h4>
-<!-- Search Form -->
+<h4>Search and List Books</h4>
 <div>
     <input type="text" @bind="searchBookTerm" placeholder="Search books..." />
     <button @onclick="SearchBooks">Search</button>
+    <span> @searchBookResults.Count results </span>
 </div>
 
-<!-- Books Table -->
 @if (searchBookResults != null && searchBookResults.Count > 0)
 {
     <table class="table">
@@ -36,152 +16,237 @@
                 <th>Title</th>
                 <th>Author</th>
                 <th>ISBN</th>
-                <th>Total Copies</th>
-                <th>Available Copies</th>
+                <th>TotalCopies</th>
+                <th>AvailableCopies</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var book in searchBookResults)
+            @foreach (var book in searchBookResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
             {
                 <tr>
-                    <td>
-                        @if (IsEditingBook(book.Id))
-                        {
-                            <input type="text" @bind="book.Title" />
-                        }
-                        else
-                        {
-                            @book.Title
-                        }
-                    </td>
-                    <td>
-                        @if (IsEditingBook(book.Id))
-                        {
-                            <input type="text" @bind="book.Author" />
-                        }
-                        else
-                        {
-                            @book.Author
-                        }
-                    </td>
-                    <td>
-                        @if (IsEditingBook(book.Id))
-                        {
-                            <input type="text" @bind="book.ISBN" />
-                        }
-                        else
-                        {
-                            @book.ISBN
-                        }
-                    </td>
-                    <td>
-                        @if (IsEditingBook(book.Id))
-                        {
-                            <input type="number" @bind="book.TotalCopies" />
-                        }
-                        else
-                        {
-                            @book.TotalCopies
-                        }
-                    </td>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.ISBN</td>
+                    <td>@book.TotalCopies</td>
                     <td>@book.AvailableCopies</td>
                     <td>
-                        @if (IsEditingBook(book.Id))
-                        {
-                            <button class="btn btn-success" @onclick="() => SaveBook(book)">Save</button>
-                            <button class="btn btn-secondary" @onclick="() => CancelEdit(book.Id)">Cancel</button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-primary" @onclick="() => BeginEdit(book.Id)">Edit</button>
-                            <button class="btn btn-danger" @onclick="() => DeleteBook(book.Id)">Delete</button>
-                        }
+                        <button class="btn btn-primary" @onclick="() => BeginEdit(book)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => ConfirmDelete(book)">Delete</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    @if (searchBookResults.Count > pageSize)
+    {
+    <div>
+        <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
+        <button class="btn btn-link" disabled="@IsLastPage()" @onclick="NextPage">Next</button>
+    </div>
+    }
 }
 else
 {
     <p>No books found.</p>
 }
 
+@if (!string.IsNullOrEmpty(errorDeletionMessage))
+    {
+        <div class="alert alert-warning">@errorDeletionMessage</div>
+    }
+
+@if (confirmingBook != null)
+{
+    <div class="modal" tabindex="-1" style="display:block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="close" @onclick="() => confirmingBook = null">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this book?</p>
+                    <p><strong>Title:</strong> @confirmingBook.Title</p> <!-- Ensure these fields are correctly filled -->
+                    <p><strong>Author:</strong> @confirmingBook.Author</p>
+                    <p><strong>ISBN:</strong> @confirmingBook.ISBN</p>
+                    <p><strong>Total Copies:</strong> @confirmingBook.TotalCopies</p>
+                    <p><strong>Available Copies:</strong> @confirmingBook.AvailableCopies</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="() => DeleteBook(confirmingBook.Id)">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => confirmingBook = null">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<h4>Book Management</h4>
+<EditForm Model="@editingBook" OnValidSubmit="SaveBook">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="title">Title:</label>
+        <InputText id="title" class="form-control" @bind-Value="editingBook.Title" />
+    </div>
+    <div class="form-group">
+        <label for="author">Author:</label>
+        <InputText id="author" class="form-control" @bind-Value="editingBook.Author" />
+    </div>
+    <div class="form-group">
+        <label for="isbn">ISBN:</label>
+        <InputText id="isbn" class="form-control" @bind-Value="editingBook.ISBN" />
+    </div>
+    <div class="form-group">
+        <label for="totalCopies">TotalCopies:</label>
+        <InputNumber id="totalCopies" class="form-control" @bind-Value="editingBook.TotalCopies" />
+    </div>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary mr-2">@ActionText</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </div>
+    @if (!string.IsNullOrEmpty(validationMessage))
+    {
+        <div class="alert alert-danger">@validationMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+</EditForm>
+
 @code {
-    private Book newBook = new Book();
-    private List<Book> books = new List<Book>();
+    private Book editingBook = new Book();
+    private Book originalBook; // Used to store the original data when editing begins
     private List<Book> searchBookResults = new List<Book>();
-    private Dictionary<int, bool> editingBookStates = new Dictionary<int, bool>();
     private string searchBookTerm;
+    private Book confirmingBook; // Store the book to be potentially deleted
+    private string validationMessage;
+    private string successMessage;
+    private string errorDeletionMessage;
+    private string ActionText = "Add Book";
+
+    private int currentPage = 1;
+    private int pageSize = 5; 
 
     protected override async Task OnInitializedAsync()
     {
-        //performing asynchronous operations that need to complete before the component is displayed
         await FetchBooks();
-    }
-    private async Task AddBook()
-    {
-        await BookService.AddBook(newBook);
-        // Optionally, add logic to confirm book addition and clear the form for new entries
-        newBook = new Book(); // Reset the form
-        await FetchBooks();
-    }
-    
-    private async Task FetchBooks()
-    {
-        books = await BookService.GetBooksAsync();
     }
 
+    private async Task FetchBooks()
+    {
+        var books = await BookService.GetBooksAsync();
+        searchBookResults = books.ToList();
+    }
+    private bool IsFirstPage() => currentPage == 1;
+    private bool IsLastPage() => (currentPage * pageSize) >= searchBookResults.Count;
+
+    private void PrevPage()
+    {
+        if (!IsFirstPage())
+            currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (!IsLastPage())
+            currentPage++;
+    }
     private async Task SearchBooks()
     {
+        var books = await BookService.GetBooksAsync();
         if (string.IsNullOrWhiteSpace(searchBookTerm))
         {
-            searchBookResults = books;
+            searchBookResults = books.ToList();
         }
         else
         {
-            searchBookResults = books.Where(b => b.Title.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase) 
-                                          || b.Author.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            searchBookResults = books.Where(b => b.Title.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)
+                                              || b.Author.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)).ToList();
         }
-        // Reset editing states for the search result
-        editingBookStates.Clear();
-        foreach (var book in searchBookResults)
+    }
+
+    private void BeginEdit(Book book)
+    {
+        originalBook = book; // Store the original book
+        editingBook = new Book // Create a copy of the book to edit
         {
-            editingBookStates[book.Id] = false;
-        }
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author,
+            ISBN = book.ISBN,
+            TotalCopies = book.TotalCopies,
+            AvailableCopies = book.AvailableCopies
+        };
+        ActionText = "Update Book";
+    }
+    private void CancelEdit()
+    {
+        ResetForm();
+    }
+    private void ResetForm()
+    {
+        editingBook = new Book();
+        ActionText = "Add Book";
+        ClearMessages();
     }
 
-    private bool IsEditingBook(int Id) => editingBookStates.TryGetValue(Id, out var isEditing) && isEditing;
-
-    private void BeginEdit(int Id)
+    private void ClearMessages()
     {
-        if (editingBookStates.ContainsKey(Id))
+        validationMessage = "";
+        successMessage = "";
+        errorDeletionMessage = "";
+    }
+
+    private async Task SaveBook()
+    {
+        if (editingBook.Id != 0 && editingBook.TotalCopies < editingBook.AvailableCopies)
         {
-            editingBookStates[Id] = true;
+            successMessage = "";
+            validationMessage = "Total Copies cannot be less than Available Copies.";
+            return;
         }
-    }
 
-    private async Task SaveBook(Book bookToSave)
+        if (editingBook.Id == 0)
+        {
+            await BookService.AddBook(editingBook);
+            ResetForm();
+            successMessage = "Book added successfully.";
+        }
+        else
+        {
+            await BookService.UpdateBook(editingBook);
+            ResetForm();
+            successMessage = "Book updated successfully.";
+        }
+        await FetchBooks();
+    }
+    private void ConfirmDelete(Book book)
     {
-        editingBookStates[bookToSave.Id] = false;
-        await BookService.UpdateBook(bookToSave); // Persist changes
-        await FetchBooks(); // Refresh the entire list
-        await SearchBooks(); // Refresh search results
+        if (book.AvailableCopies < book.TotalCopies)
+        {
+            errorDeletionMessage = $"Cannot delete '{book.Title}' because there are still {book.TotalCopies - book.AvailableCopies} rentals";
+            confirmingBook = null; // Reset confirming book as we are not proceeding to deletion
+        }
+        else
+        {
+            confirmingBook = book;
+            errorDeletionMessage = "";
+        }
+        
     }
-
-    private void CancelEdit(int Id)
-    {
-        editingBookStates[Id] = false;
-        // Optionally revert any changes by re-fetching the book details
-    }
-
     private async Task DeleteBook(int Id)
     {
+        confirmingBook = null;
+        errorDeletionMessage = "";
         await BookService.RemoveBook(Id);
-        await FetchBooks(); // Refresh the entire list
-        await SearchBooks(); // Refresh search results
-        editingBookStates.Remove(Id); // Clean up the editing state
+        await FetchBooks();
+        if (editingBook.Id == Id)
+        {
+            ResetForm();
+        }
     }
-    
 }
