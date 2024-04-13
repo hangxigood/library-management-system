@@ -2,54 +2,53 @@ using SQLite;
 
 public interface IBookService
 {
-    List<Book> SearchBooks(string criteria);
-    bool CheckoutBook(int bookId, int memberId);
-    bool ReturnBook(int bookCopyId);
+    Task AddBook(Book newBook);
+    Task RemoveBook(int bookId);
+    Task UpdateBook(Book updatedBook);
+    Task<List<Book>> GetBooksAsync();
+    Task<Book> GetBookByIdAsync(int bookId);
 }
 
 public class BookService : IBookService
 {
-    private readonly SQLiteConnection db;
-
+    private readonly SQLiteAsyncConnection db;
     public BookService(string dbPath)
     {
-        db = new SQLiteConnection(dbPath);
-        db.CreateTable<Book>();
-        db.CreateTable<Loan>();
+        db = new SQLiteAsyncConnection(dbPath);
+        InitializeDatabaseAsync();
     }
 
-    public List<Book> SearchBooks(string criteria)
+    private async Task InitializeDatabaseAsync()
     {
-        return db.Table<Book>().Where(b => b.Title.Contains(criteria) || b.Author.Contains(criteria)).ToList();
+        await db.CreateTableAsync<Book>();
     }
 
-    public bool CheckoutBook(int bookId, int memberId)
+    public async Task AddBook(Book newBook)
     {
-        var book = db.Table<Book>().FirstOrDefault(b => b.Id == bookId);
-        if (book == null || book.AvailableCopies <= 0) return false;
-
-        book.AvailableCopies--;
-        db.Update(book);
-
-        var loan = new Loan { BookId = bookId, MemberId = memberId, CheckoutDate = DateTime.Now, DueDate = DateTime.Now.AddDays(14) };
-        db.Insert(loan);
-        return true;
+        await db.InsertAsync(newBook);
+    }
+    public async Task<List<Book>> GetBooksAsync()
+    {
+        return await db.Table<Book>().ToListAsync();
     }
 
-    public bool ReturnBook(int bookId)
+    public async Task<Book> GetBookByIdAsync(int bookId)
     {
-        var book = db.Table<Book>().FirstOrDefault(b => b.Id == bookId);
-        if (book == null || book.AvailableCopies >= book.TotalCopies) return false;
+        return await db.FindAsync<Book>(bookId);
+    }
 
-        book.AvailableCopies++;
-        db.Update(book);
-
-        var loan = db.Table<Loan>().FirstOrDefault(l => l.BookId == bookId && l.ReturnDate == null);
-        if (loan != null)
+    public async Task RemoveBook(int bookId)
+    {
+        var book = await db.FindAsync<Book>(bookId);
+        if (book != null)
         {
-            loan.ReturnDate = DateTime.Now;
-            db.Update(loan);
+            await db.DeleteAsync(book);
         }
-        return true;
     }
+
+    public async Task UpdateBook(Book updatedBook)
+    {
+        await db.UpdateAsync(updatedBook);
+    }
+
 }

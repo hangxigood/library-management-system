@@ -1,0 +1,107 @@
+﻿@page "/loan_management"
+@inject ILoanService LoanService
+
+<PageTitle>Loan Management</PageTitle>
+
+<h4>Add New Loan</h4>
+<EditForm Model="@newLoan" OnValidSubmit="AddLoan">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="bookId">Book ID:</label>
+        <InputNumber id="bookId" class="form-control" @bind-Value="newLoan.BookId" />
+    </div>
+    <div class="form-group">
+        <label for="memberId">Member ID:</label>
+        <InputNumber id="memberId" class="form-control" @bind-Value="newLoan.MemberId" />
+    </div>
+    <div class="form-group">
+        <label for="dueDate">Due Date:</label>
+        <InputDate id="dueDate" class="form-control" @bind-Value="newLoan.DueDate" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Loan</button>
+</EditForm>
+
+<h4>Current Loans</h4>
+<!-- Search and Filter Loans -->
+<div>
+    <input type="text" @bind="searchTerm" placeholder="Search by Member or Book ID..." />
+    <button @onclick="SearchLoans">Search</button>
+</div>
+
+<!-- Loans Table -->
+@if (loanResults != null && loanResults.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Member ID</th>
+                <th>Checkout Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var loan in loanResults)
+            {
+                <tr>
+                    <td>@loan.BookId</td>
+                    <td>@loan.MemberId</td>
+                    <td>@loan.CheckoutDate.ToShortDateString()</td>
+                    <td>@loan.DueDate.ToShortDateString()</td>
+                    <td>@loan.ReturnDate?.ToShortDateString()</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => BeginEditLoan(loan.Id)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteLoan(loan.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No loans found.</p>
+}
+
+@code {
+    private Loan newLoan = new Loan();
+    private List<Loan> loanResults = new List<Loan>();
+    private string searchTerm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchLoans();
+    }
+
+    private async Task FetchLoans()
+    {
+        loanResults = await LoanService.GetLoansAsync();
+    }
+
+    private async Task AddLoan()
+    {
+        await LoanService.AddLoan(newLoan);
+        newLoan = new Loan(); // Reset the form
+        await FetchLoans();
+    }
+
+    private async Task SearchLoans()
+    {
+        // Implement search logic based on the searchTerm, similar to your member search
+        // Reset states as needed
+    }
+
+    private async Task BeginEditLoan(int id)
+    {
+        // Implement logic to begin editing a loan
+    }
+
+    private async Task DeleteLoan(int id)
+    {
+        await LoanService.RemoveLoan(id);
+        await FetchLoans(); // Refresh the list
+    }
+}

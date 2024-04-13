@@ -2,33 +2,46 @@ using SQLite;
 
 public interface IMemberService
 {
-    void RegisterMember(Member newMember);
-    Member GetMemberDetails(int memberId);
-    void UpdateMemberInfo(Member updatedMember);
+    Task AddMember(Member newMember);
+    Task RemoveMember(int memberId);
+    Task UpdateMember(Member updatedMember);
+    Task<List<Member>> GetMembersAsync();
 }
 
 public class MemberService : IMemberService
 {
-    private readonly SQLiteConnection db;
+    private readonly SQLiteAsyncConnection db;
 
     public MemberService(string dbPath)
     {
-        db = new SQLiteConnection(dbPath);
-        db.CreateTable<Member>();
+        db = new SQLiteAsyncConnection(dbPath);
+        InitializeDatabaseAsync();
+    }
+    private async Task InitializeDatabaseAsync()
+    {
+        await db.CreateTableAsync<Member>();
+    }
+    public async Task AddMember(Member newMember)
+    {
+        await db.InsertAsync(newMember);
     }
 
-    public void RegisterMember(Member newMember)
+    public async Task<List<Member>> GetMembersAsync()
     {
-        db.Insert(newMember);
+        return await db.Table<Member>().ToListAsync();
     }
 
-    public Member GetMemberDetails(int memberId)
+    public async Task RemoveMember(int memberId)
     {
-        return db.Get<Member>(memberId);
+        var member = await db.FindAsync<Member>(memberId);
+        if (member != null)
+        {
+            await db.DeleteAsync(member);
+        }
     }
 
-    public void UpdateMemberInfo(Member updatedMember)
+    public async Task UpdateMember(Member updatedMember)
     {
-        db.Update(updatedMember);
+        await db.UpdateAsync(updatedMember);
     }
 }

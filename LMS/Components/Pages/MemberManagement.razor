@@ -1,0 +1,160 @@
+﻿@page "/member_management"
+@inject IMemberService MemberService
+
+<PageTitle>Member Details</PageTitle>
+
+
+<h4>Add New Member</h4>
+<EditForm Model="@newMember" OnValidSubmit="AddMember">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <InputText id="name" class="form-control" @bind-Value="newMember.Name" />
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <InputText id="email" class="form-control" @bind-Value="newMember.Email" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Member</button>
+</EditForm>
+
+
+<h4>Update/Delete Member</h4>
+<!-- Search Form for Members -->
+<div>
+    <input type="text" @bind="searchMemberTerm" placeholder="Search members..." />
+    <button @onclick="SearchMembers">Search</button>
+</div>
+
+<!-- Members Table -->
+@if (searchMemberResults != null && searchMemberResults.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var member in searchMemberResults)
+            {
+                <tr>
+                    <td>
+                        @if (IsEditingMember(member.Id))
+                        {
+                            <input type="text" @bind="member.Name" />
+                        }
+                        else
+                        {
+                            @member.Name
+                        }
+                    </td>
+                    <td>
+                        @if (IsEditingMember(member.Id))
+                        {
+                            <input type="text" @bind="member.Email" />
+                        }
+                        else
+                        {
+                            @member.Email
+                        }
+                    </td>
+                    <td>
+                        @if (IsEditingMember(member.Id))
+                        {
+                            <button class="btn btn-success" @onclick="() => SaveMember(member)">Save</button>
+                            <button class="btn btn-secondary" @onclick="() => CancelEditMember(member.Id)">Cancel</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary" @onclick="() => BeginEditMember(member.Id)">Edit</button>
+                            <button class="btn btn-danger" @onclick="() => DeleteMember(member.Id)">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No members found.</p>
+}
+
+
+@code {
+
+    private Member newMember = new Member();
+    private List<Member> members = new List<Member>();
+    private List<Member> searchMemberResults = new List<Member>();
+    private Dictionary<int, bool> editingMemberStates = new Dictionary<int, bool>();
+    private string searchMemberTerm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //performing asynchronous operations that need to complete before the component is displayed
+        await FetchMembers();
+    }
+    private async Task FetchMembers()
+    {
+        members = await MemberService.GetMembersAsync();
+    }
+    private async Task AddMember()
+    {
+        await MemberService.AddMember(newMember);
+        // Optionally, add logic to confirm book addition and clear the form for new entries
+        newMember = new Member(); // Reset the form
+        await FetchMembers();
+    }
+
+    private async Task SearchMembers()
+    {
+        if (string.IsNullOrWhiteSpace(searchMemberTerm))
+        {
+            searchMemberResults = members;
+        }
+        else
+        {
+            searchMemberResults = members.Where(m => m.Name.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase) 
+                                                 || m.Email.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        // Reset editing states for the search result
+        editingMemberStates.Clear();
+        foreach (var member in searchMemberResults)
+        {
+            editingMemberStates[member.Id] = false;
+        }
+    }
+
+    private bool IsEditingMember(int id) => editingMemberStates.TryGetValue(id, out var isEditing) && isEditing;
+
+    private void BeginEditMember(int id)
+    {
+        editingMemberStates[id] = true;
+    }
+
+    private async Task SaveMember(Member memberToSave)
+    {
+        editingMemberStates[memberToSave.Id] = false;
+        await MemberService.UpdateMember(memberToSave); // Persist changes
+        await FetchMembers(); // Refresh the entire list
+        await SearchMembers(); // Refresh search results
+    }
+
+    private void CancelEditMember(int id)
+    {
+        editingMemberStates[id] = false;
+        // Optionally revert any changes by re-fetching the member details
+    }
+
+    private async Task DeleteMember(int id)
+    {
+        await MemberService.RemoveMember(id);
+        await FetchMembers(); // Refresh the entire list
+        await SearchMembers(); // Refresh search results
+        editingMemberStates.Remove(id); // Clean up the editing state
+    }
+}

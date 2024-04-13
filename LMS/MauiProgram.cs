@@ -20,7 +20,7 @@ public static class MauiProgram
 		Console.WriteLine($"{dbPath}");
         builder.Services.AddSingleton<IBookService>(s => new BookService(dbPath));
         builder.Services.AddSingleton<IMemberService>(s => new MemberService(dbPath));
-        builder.Services.AddSingleton<IAdminService>(s => new AdminService(dbPath));
+        builder.Services.AddSingleton<ILoanService>(s => new LoanService(dbPath));
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
