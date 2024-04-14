@@ -3,15 +3,16 @@
 
 <PageTitle>Loan Management</PageTitle>
 
+<!-- Section for managing current loans -->
 <h4>Current Loans</h4>
-<!-- Search and Filter Loans -->
+<!-- Search and filter functionality for loans -->
 <div>
     <input type="text" @bind="searchTerm" placeholder="Search by Member Email or Book Title..." />
     <button @onclick="SearchLoans">Search</button>
-    <span> @searchResults.Count results </span>
+    <span> @searchResults.Count results </span> <!-- Display the count of search results -->
 </div>
 
-<!-- Loans Table -->
+<!-- Table display for loans -->
 @if (searchResults != null && searchResults.Count > 0)
 {
     <table class="table">
@@ -35,52 +36,61 @@
                     <td>@loan.DueDate.ToShortDateString()</td>
                     <td>@loan.ReturnDate?.ToShortDateString()</td>
                     <td>
-                        @if (loan.ReturnDate == null) // Check if the ReturnDate is null
-                        {<button class="btn btn-primary" @onclick="() => ReturnLoan(loan)">Return</button>}
+                        <!-- Conditional display of the Return button -->
+                        @if (loan.ReturnDate == null)
+                        {
+                            <button class="btn btn-primary" @onclick="() => ReturnLoan(loan)">Return</button>
+                        }
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    <!-- Pagination controls -->
     @if (searchResults.Count > pageSize)
     {
-    <div>
-        <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
-        <button class="btn btn-link" disabled="@IsLastPage()" @onclick="NextPage">Next</button>
-    </div>
+        <div>
+            <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
+            <button class="btn btn-link" disabled="@IsLastPage()" @onclick="NextPage">Next</button>
+        </div>
     }
 }
 else
 {
-    <p>No loans found.</p>
+    <p>No loans found.</p> <!-- Displayed if no loans are found -->
 }
 
+<!-- Form for adding new loans -->
 <h4>Add New Loan</h4>
 <EditForm Model="@newLoan" OnValidSubmit="AddLoan">
     <DataAnnotationsValidator />
     <ValidationSummary />
+    <!-- Input for Book ISBN -->
     <div class="form-group">
         <label for="bookISBN">Book ISBN:</label>
         <InputText id="bookISBN" class="form-control" @bind-Value="newLoan.BookISBN" />
     </div>
+    <!-- Input for Member Email -->
     <div class="form-group">
         <label for="memberEmail">Member Email:</label>
         <InputText id="memberEmail" class="form-control" @bind-Value="newLoan.MemberEmail" />
     </div>
     <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Add Loan</button>
+        <button type="submit" class="btn btn-primary">Add Loan</button> <!-- Submit button for the form -->
     </div>
 </EditForm>
-    @if (!string.IsNullOrEmpty(validationMessage))
-    {
-        <div class="alert alert-danger">@validationMessage</div>
-    }
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success">@successMessage</div>
-    }
+<!-- Error and success message display -->
+@if (!string.IsNullOrEmpty(validationMessage))
+{
+    <div class="alert alert-danger">@validationMessage</div>
+}
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
 
 @code {
+    // Fields to hold form and search data
     private Loan newLoan = new Loan();
     private List<Loan> searchResults = new List<Loan>();
     private string searchTerm;
@@ -89,10 +99,13 @@ else
     private int currentPage = 1;
     private int pageSize = 8; 
 
+    // Lifecycle method to load data on initialization
     protected override async Task OnInitializedAsync()
     {
         await FetchLoans();
     }
+
+    // Method to fetch all loans and handle exceptions
     private async Task FetchLoans()
     {
         try
@@ -107,7 +120,7 @@ else
         }
     }
 
-    // Pagination helpers
+    // Pagination helper methods
     private bool IsFirstPage() => currentPage == 1;
     private bool IsLastPage() => (currentPage * pageSize) >= searchResults.Count;
     private void PrevPage()
@@ -120,6 +133,8 @@ else
         if (!IsLastPage())
             currentPage++;
     }
+
+    // Method to add a new loan and handle exceptions
     private async Task AddLoan()
     {
         try
@@ -133,15 +148,18 @@ else
         {
             validationMessage = "Failed to add loan: " + ex.Message;
         }
-        StateHasChanged(); // Ensure UI update
-        await Task.Delay(3000);
-        ClearMessages();
+        StateHasChanged(); // Trigger UI update
+        await Task.Delay(3000); // Delay for message display
+        ClearMessages(); // Clear messages after display
     }
+
+    // Method to return a loan
     private async Task ReturnLoan(Loan returnLoan)
     {
         await LoanService.ReturnLoan(returnLoan);
     }
 
+    // Method to search loans based on the search term
     private async Task SearchLoans()
     {
         try
@@ -166,10 +184,10 @@ else
         }
     }
 
+    // Method to clear display messages
     private void ClearMessages()
     {
         validationMessage = string.Empty;
         successMessage = string.Empty;
     }
-
 }
