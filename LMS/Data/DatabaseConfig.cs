@@ -71,8 +71,36 @@ public class DatabaseConfig
         // Example data for Members
         var members = new List<Member>
         {
-            new Member { Name = "John Doe", Email = "john.doe@example.com" },
-            new Member { Name = "Jane Smith", Email = "jane.smith@example.com" }
+            new Member { Id = 1, Name = "Alice Johnson", Email = "alice.johnson@example.com" },
+            new Member { Id = 2, Name = "Bob Smith", Email = "bob.smith@example.com" },
+            new Member { Id = 3, Name = "Carol White", Email = "carol.white@example.com" },
+            new Member { Id = 4, Name = "David Brown", Email = "david.brown@example.com" },
+            new Member { Id = 5, Name = "Eva Parker", Email = "eva.parker@example.com" },
+            new Member { Id = 6, Name = "Frank Harris", Email = "frank.harris@example.com" },
+            new Member { Id = 7, Name = "Grace Hall", Email = "grace.hall@example.com" },
+            new Member { Id = 8, Name = "Henry Allen", Email = "henry.allen@example.com" },
+            new Member { Id = 9, Name = "Ivy Wilson", Email = "ivy.wilson@example.com" },
+            new Member { Id = 10, Name = "Jack Martinez", Email = "jack.martinez@example.com" },
+            new Member { Id = 11, Name = "Karen Hill", Email = "karen.hill@example.com" },
+            new Member { Id = 12, Name = "Leo Scott", Email = "leo.scott@example.com" },
+            new Member { Id = 13, Name = "Mia Rivera", Email = "mia.rivera@example.com" },
+            new Member { Id = 14, Name = "Noah Green", Email = "noah.green@example.com" },
+            new Member { Id = 15, Name = "Olivia Lee", Email = "olivia.lee@example.com" },
+            new Member { Id = 16, Name = "Pete Young", Email = "pete.young@example.com" },
+            new Member { Id = 17, Name = "Quinn Cook", Email = "quinn.cook@example.com" },
+            new Member { Id = 18, Name = "Rachel Adams", Email = "rachel.adams@example.com" },
+            new Member { Id = 19, Name = "Samuel Black", Email = "samuel.black@example.com" },
+            new Member { Id = 20, Name = "Tina Clark", Email = "tina.clark@example.com" },
+            new Member { Id = 21, Name = "Uma Thompson", Email = "uma.thompson@example.com" },
+            new Member { Id = 22, Name = "Victor Phillips", Email = "victor.phillips@example.com" },
+            new Member { Id = 23, Name = "Wendy Mitchell", Email = "wendy.mitchell@example.com" },
+            new Member { Id = 24, Name = "Xavier Turner", Email = "xavier.turner@example.com" },
+            new Member { Id = 25, Name = "Yara Lewis", Email = "yara.lewis@example.com" },
+            new Member { Id = 26, Name = "Zane Walker", Email = "zane.walker@example.com" },
+            new Member { Id = 27, Name = "April Carter", Email = "april.carter@example.com" },
+            new Member { Id = 28, Name = "Bruce King", Email = "bruce.king@example.com" },
+            new Member { Id = 29, Name = "Cindy Wright", Email = "cindy.wright@example.com" },
+            new Member { Id = 30, Name = "Derek Foster", Email = "derek.foster@example.com" }
         };
         db.InsertAll(members);
 

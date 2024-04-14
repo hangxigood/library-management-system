@@ -1,33 +1,13 @@
 ﻿@page "/member_management"
 @inject IMemberService MemberService
 
-<PageTitle>Member Details</PageTitle>
-
-
-<h4>Add New Member</h4>
-<EditForm Model="@newMember" OnValidSubmit="AddMember">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="form-group">
-        <label for="name">Name:</label>
-        <InputText id="name" class="form-control" @bind-Value="newMember.Name" />
-    </div>
-    <div class="form-group">
-        <label for="email">Email:</label>
-        <InputText id="email" class="form-control" @bind-Value="newMember.Email" />
-    </div>
-    <button type="submit" class="btn btn-primary">Add Member</button>
-</EditForm>
-
-
-<h4>Update/Delete Member</h4>
-<!-- Search Form for Members -->
+<h4>Search and List Members</h4>
 <div>
     <input type="text" @bind="searchMemberTerm" placeholder="Search members..." />
     <button @onclick="SearchMembers">Search</button>
+    <span> @searchMemberResults.Count results </span>
 </div>
 
-<!-- Members Table -->
 @if (searchMemberResults != null && searchMemberResults.Count > 0)
 {
     <table class="table">
@@ -39,122 +19,252 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var member in searchMemberResults)
+            @foreach (var member in searchMemberResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
             {
                 <tr>
+                    <td>@member.Name</td>
+                    <td>@member.Email</td>
                     <td>
-                        @if (IsEditingMember(member.Id))
-                        {
-                            <input type="text" @bind="member.Name" />
-                        }
-                        else
-                        {
-                            @member.Name
-                        }
-                    </td>
-                    <td>
-                        @if (IsEditingMember(member.Id))
-                        {
-                            <input type="text" @bind="member.Email" />
-                        }
-                        else
-                        {
-                            @member.Email
-                        }
-                    </td>
-                    <td>
-                        @if (IsEditingMember(member.Id))
-                        {
-                            <button class="btn btn-success" @onclick="() => SaveMember(member)">Save</button>
-                            <button class="btn btn-secondary" @onclick="() => CancelEditMember(member.Id)">Cancel</button>
-                        }
-                        else
-                        {
-                            <button class="btn btn-primary" @onclick="() => BeginEditMember(member.Id)">Edit</button>
-                            <button class="btn btn-danger" @onclick="() => DeleteMember(member.Id)">Delete</button>
-                        }
+                        <button class="btn btn-primary" @onclick="() => BeginEdit(member)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => ConfirmDelete(member)">Delete</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    @if (searchMemberResults.Count > pageSize)
+    {
+    <div>
+        <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
+        <button class="btn btn-link" disabled="@IsLastPage()" @onclick="NextPage">Next</button>
+    </div>
+    }
 }
 else
 {
     <p>No members found.</p>
 }
 
+@if (!string.IsNullOrEmpty(errorDeletionMessage))
+{
+    <div class="alert alert-warning">@errorDeletionMessage</div>
+}
+
+@if (confirmingMember != null)
+{
+    <div class="modal" tabindex="-1" style="display:block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-name">Confirm Delete</h5>
+                    <button type="button" class="close" @onclick="() => confirmingMember = null">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this member?</p>
+                    <p><strong>Name:</strong> @confirmingMember.Name</p>
+                    <p><strong>Email:</strong> @confirmingMember.Email</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="() => DeleteMember(confirmingMember.Id)">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="() => confirmingMember = null">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<h4>Member Management</h4>
+<EditForm Model="@editingMember" OnValidSubmit="SaveMember">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <InputText id="name" class="form-control" @bind-Value="editingMember.Name" />
+    </div>
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <InputText id="email" class="form-control" @bind-Value="editingMember.Email" />
+    </div>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary mr-2">@ActionText</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+    </div>
+    @if (!string.IsNullOrEmpty(validationMessage))
+    {
+        <div class="alert alert-danger">@validationMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+</EditForm>
 
 @code {
-
-    private Member newMember = new Member();
-    private List<Member> members = new List<Member>();
+    // Class fields
+    private Member editingMember = new Member();
+    private Member originalMember; // Used to store the original data when editing begins
     private List<Member> searchMemberResults = new List<Member>();
-    private Dictionary<int, bool> editingMemberStates = new Dictionary<int, bool>();
     private string searchMemberTerm;
+    private Member confirmingMember; // Store the member to be potentially deleted
+    private string validationMessage;
+    private string successMessage;
+    private string errorDeletionMessage;
+    private string ActionText = "Add Member";
+    private int currentPage = 1;
+    private int pageSize = 5; 
 
+    // Component initialization
     protected override async Task OnInitializedAsync()
     {
-        //performing asynchronous operations that need to complete before the component is displayed
         await FetchMembers();
+        ResetForm();
     }
+
+    // Fetch members from the service
     private async Task FetchMembers()
     {
-        members = await MemberService.GetMembersAsync();
-    }
-    private async Task AddMember()
-    {
-        await MemberService.AddMember(newMember);
-        // Optionally, add logic to confirm book addition and clear the form for new entries
-        newMember = new Member(); // Reset the form
-        await FetchMembers();
+        try
+        {
+            var members = await MemberService.GetMembersAsync();
+            searchMemberResults = members.ToList();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"Error fetching members: {ex.Message}";
+        }
     }
 
+    // Pagination helpers
+    private bool IsFirstPage() => currentPage == 1;
+    private bool IsLastPage() => (currentPage * pageSize) >= searchMemberResults.Count;
+    private void PrevPage()
+    {
+        if (!IsFirstPage())
+            currentPage--;
+    }
+    private void NextPage()
+    {
+        if (!IsLastPage())
+            currentPage++;
+    }
+
+    // Search members based on input
     private async Task SearchMembers()
     {
-        if (string.IsNullOrWhiteSpace(searchMemberTerm))
+        try
         {
-            searchMemberResults = members;
+            var members = await MemberService.GetMembersAsync();
+            if (string.IsNullOrWhiteSpace(searchMemberTerm))
+            {
+                searchMemberResults = members.ToList();
+            }
+            else
+            {
+                searchMemberResults = members.Where(b => b.Name.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.Email.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            errorDeletionMessage = "";
         }
-        else
+        catch (Exception ex)
         {
-            searchMemberResults = members.Where(m => m.Name.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase) 
-                                                 || m.Email.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            errorDeletionMessage = "Search failed: " + ex.Message;
         }
-        // Reset editing states for the search result
-        editingMemberStates.Clear();
-        foreach (var member in searchMemberResults)
+    }
+
+    // Start editing a member
+    private void BeginEdit(Member member)
+    {
+        originalMember = member; // Store the original member
+        editingMember = new Member // Create a copy of the member to edit
         {
-            editingMemberStates[member.Id] = false;
+            Id = member.Id,
+            Name = member.Name,
+            Email = member.Email
+        };
+        ActionText = "Update Member";
+        ClearMessages();
+    }
+
+    // Cancel the current editing
+    private void CancelEdit()
+    {
+        ResetForm();
+        ClearMessages();
+    }
+
+    // Reset the form to its initial state
+    private void ResetForm()
+    {
+        editingMember = new Member();
+        ActionText = "Add Member";
+    }
+
+    // Clear all messages displayed on the UI
+    private void ClearMessages()
+    {
+        validationMessage = string.Empty;
+        successMessage = string.Empty;
+        errorDeletionMessage = string.Empty;
+    }
+
+    // Save the member details
+    private async Task SaveMember()
+    {
+        string localSuccessMessage = "";
+        try
+        {
+            if (editingMember.Id == 0)
+            {
+                await MemberService.AddMember(editingMember);
+                localSuccessMessage = "Member added successfully.";
+            }
+            else
+            {
+                await MemberService.UpdateMember(editingMember);
+                localSuccessMessage = "Member updated successfully.";
+            }
+            validationMessage = ""; // Clear validation message on success
+            successMessage = localSuccessMessage;
+        }
+        catch (Exception ex)
+        {
+            validationMessage = "Failed to save member: " + ex.Message;
+            successMessage = "";
+        }
+        finally
+        {
+            await FetchMembers();
+            StateHasChanged(); // Ensure UI update
+            await Task.Delay(3000);
+            ClearMessages();
+            ResetForm(); // Reset form fields after UI update
         }
     }
 
-    private bool IsEditingMember(int id) => editingMemberStates.TryGetValue(id, out var isEditing) && isEditing;
-
-    private void BeginEditMember(int id)
+    // Confirm deletion of a member
+    private void ConfirmDelete(Member member)
     {
-        editingMemberStates[id] = true;
+        confirmingMember = member;
+        errorDeletionMessage = "";
     }
 
-    private async Task SaveMember(Member memberToSave)
+    // Execute deletion of a member
+    private async Task DeleteMember(int Id)
     {
-        editingMemberStates[memberToSave.Id] = false;
-        await MemberService.UpdateMember(memberToSave); // Persist changes
-        await FetchMembers(); // Refresh the entire list
-        await SearchMembers(); // Refresh search results
-    }
-
-    private void CancelEditMember(int id)
-    {
-        editingMemberStates[id] = false;
-        // Optionally revert any changes by re-fetching the member details
-    }
-
-    private async Task DeleteMember(int id)
-    {
-        await MemberService.RemoveMember(id);
-        await FetchMembers(); // Refresh the entire list
-        await SearchMembers(); // Refresh search results
-        editingMemberStates.Remove(id); // Clean up the editing state
+        try
+        {
+            await MemberService.RemoveMember(Id);
+            await FetchMembers();
+            if (editingMember.Id == Id)
+            {
+                ResetForm();
+            }
+            errorDeletionMessage = "";
+            confirmingMember = null;
+        }
+        catch (Exception ex)
+        {
+            errorDeletionMessage = "Failed to delete member: " + ex.Message;
+        }
     }
 }

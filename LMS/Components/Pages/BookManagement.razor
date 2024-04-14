@@ -52,9 +52,9 @@ else
 }
 
 @if (!string.IsNullOrEmpty(errorDeletionMessage))
-    {
-        <div class="alert alert-warning">@errorDeletionMessage</div>
-    }
+{
+    <div class="alert alert-warning">@errorDeletionMessage</div>
+}
 
 @if (confirmingBook != null)
 {
@@ -67,7 +67,7 @@ else
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete this book?</p>
-                    <p><strong>Title:</strong> @confirmingBook.Title</p> <!-- Ensure these fields are correctly filled -->
+                    <p><strong>Title:</strong> @confirmingBook.Title</p>
                     <p><strong>Author:</strong> @confirmingBook.Author</p>
                     <p><strong>ISBN:</strong> @confirmingBook.ISBN</p>
                     <p><strong>Total Copies:</strong> @confirmingBook.TotalCopies</p>
@@ -82,7 +82,6 @@ else
     </div>
 }
 
-
 <h4>Book Management</h4>
 <EditForm Model="@editingBook" OnValidSubmit="SaveBook">
     <DataAnnotationsValidator />
@@ -96,7 +95,7 @@ else
         <InputText id="author" class="form-control" @bind-Value="editingBook.Author" />
     </div>
     <div class="form-group">
-        <label for="isbn">ISBN:</label>
+        <label for="isbn">ISBN:</label
         <InputText id="isbn" class="form-control" @bind-Value="editingBook.ISBN" />
     </div>
     <div class="form-group">
@@ -118,6 +117,7 @@ else
 </EditForm>
 
 @code {
+    // Class fields
     private Book editingBook = new Book();
     private Book originalBook; // Used to store the original data when editing begins
     private List<Book> searchBookResults = new List<Book>();
@@ -127,48 +127,68 @@ else
     private string successMessage;
     private string errorDeletionMessage;
     private string ActionText = "Add Book";
-
     private int currentPage = 1;
     private int pageSize = 5; 
 
+    // Component initialization
     protected override async Task OnInitializedAsync()
     {
         await FetchBooks();
+        ResetForm();
     }
 
+    // Fetch books from the service
     private async Task FetchBooks()
     {
-        var books = await BookService.GetBooksAsync();
-        searchBookResults = books.ToList();
+        try
+        {
+            var books = await BookService.GetBooksAsync();
+            searchBookResults = books.ToList();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"Error fetching books: {ex.Message}";
+        }
     }
+
+    // Pagination helpers
     private bool IsFirstPage() => currentPage == 1;
     private bool IsLastPage() => (currentPage * pageSize) >= searchBookResults.Count;
-
     private void PrevPage()
     {
         if (!IsFirstPage())
             currentPage--;
     }
-
     private void NextPage()
     {
         if (!IsLastPage())
             currentPage++;
     }
+
+    // Search books based on input
     private async Task SearchBooks()
     {
-        var books = await BookService.GetBooksAsync();
-        if (string.IsNullOrWhiteSpace(searchBookTerm))
+        try
         {
-            searchBookResults = books.ToList();
+            var books = await BookService.GetBooksAsync();
+            if (string.IsNullOrWhiteSpace(searchBookTerm))
+            {
+                searchBookResults = books.ToList();
+            }
+            else
+            {
+                searchBookResults = books.Where(b => b.Title.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.Author.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            errorDeletionMessage = "";
         }
-        else
+        catch (Exception ex)
         {
-            searchBookResults = books.Where(b => b.Title.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)
-                                              || b.Author.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            errorDeletionMessage = "Search failed: " + ex.Message;
         }
     }
 
+    // Start editing a book
     private void BeginEdit(Book book)
     {
         originalBook = book; // Store the original book
@@ -182,48 +202,65 @@ else
             AvailableCopies = book.AvailableCopies
         };
         ActionText = "Update Book";
+        ClearMessages();
     }
+
+    // Cancel the current editing
     private void CancelEdit()
     {
         ResetForm();
     }
+
+    // Reset the form to its initial state
     private void ResetForm()
     {
         editingBook = new Book();
         ActionText = "Add Book";
-        ClearMessages();
     }
 
+    // Clear all messages displayed on the UI
     private void ClearMessages()
     {
-        validationMessage = "";
-        successMessage = "";
-        errorDeletionMessage = "";
+        validationMessage = string.Empty;
+        successMessage = string.Empty;
+        errorDeletionMessage = string.Empty;
     }
 
+    // Save the book details
     private async Task SaveBook()
     {
-        if (editingBook.Id != 0 && editingBook.TotalCopies < editingBook.AvailableCopies)
+        string localSuccessMessage = "";
+        try
         {
+            if (editingBook.Id == 0)
+            {
+                await BookService.AddBook(editingBook);
+                localSuccessMessage = "Book added successfully.";
+            }
+            else
+            {
+                await BookService.UpdateBook(editingBook);
+                localSuccessMessage = "Book updated successfully.";
+            }
+            validationMessage = ""; // Clear validation message on success
+            successMessage = localSuccessMessage;
+        }
+        catch (Exception ex)
+        {
+            validationMessage = "Failed to save book: " + ex.Message;
             successMessage = "";
-            validationMessage = "Total Copies cannot be less than Available Copies.";
-            return;
         }
-
-        if (editingBook.Id == 0)
+        finally
         {
-            await BookService.AddBook(editingBook);
-            ResetForm();
-            successMessage = "Book added successfully.";
+            await FetchBooks();
+            StateHasChanged(); // Ensure UI update
+            await Task.Delay(3000);
+            ClearMessages();
+            ResetForm(); // Reset form fields after UI update
         }
-        else
-        {
-            await BookService.UpdateBook(editingBook);
-            ResetForm();
-            successMessage = "Book updated successfully.";
-        }
-        await FetchBooks();
     }
+
+    // Confirm deletion of a book
     private void ConfirmDelete(Book book)
     {
         if (book.AvailableCopies < book.TotalCopies)
@@ -236,17 +273,25 @@ else
             confirmingBook = book;
             errorDeletionMessage = "";
         }
-        
     }
+
+    // Execute deletion of a book
     private async Task DeleteBook(int Id)
     {
-        confirmingBook = null;
-        errorDeletionMessage = "";
-        await BookService.RemoveBook(Id);
-        await FetchBooks();
-        if (editingBook.Id == Id)
+        try
         {
-            ResetForm();
+            await BookService.RemoveBook(Id);
+            await FetchBooks();
+            if (editingBook.Id == Id)
+            {
+                ResetForm();
+            }
+            errorDeletionMessage = "";
+            confirmingBook = null;
+        }
+        catch (Exception ex)
+        {
+            errorDeletionMessage = "Failed to delete book: " + ex.Message;
         }
     }
 }
