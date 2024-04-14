@@ -25,7 +25,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var loan in loanResults)
+            @foreach (var loan in loanResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
             {
                 <tr>
                     <td>@loan.BookTitle</td>
@@ -34,12 +34,20 @@
                     <td>@loan.DueDate.ToShortDateString()</td>
                     <td>@loan.ReturnDate?.ToShortDateString()</td>
                     <td>
-                        <button class="btn btn-primary" @onclick="() => ReturnLoan(loan)">Return</button>
+                        @if (loan.ReturnDate == null) // Check if the ReturnDate is null
+                        {<button class="btn btn-primary" @onclick="() => ReturnLoan(loan)">Return</button>}
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    @if (loanResults.Count > pageSize)
+    {
+    <div>
+        <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
+        <button class="btn btn-link" disabled="@IsLastPage()" @onclick="NextPage">Next</button>
+    </div>
+    }
 }
 else
 {
@@ -70,6 +78,8 @@ else
     private List<Loan> loanResults = new List<Loan>();
     private string searchTerm;
     private string validationMessage;
+    private int currentPage = 1;
+    private int pageSize = 5; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,6 +98,19 @@ else
         }
     }
 
+    // Pagination helpers
+    private bool IsFirstPage() => currentPage == 1;
+    private bool IsLastPage() => (currentPage * pageSize) >= loanResults.Count;
+    private void PrevPage()
+    {
+        if (!IsFirstPage())
+            currentPage--;
+    }
+    private void NextPage()
+    {
+        if (!IsLastPage())
+            currentPage++;
+    }
     private async Task AddLoan()
     {
         await LoanService.AddLoan(newLoan);
