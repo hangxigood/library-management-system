@@ -16,11 +16,11 @@ public static class MauiProgram
 
 		builder.Services.AddMauiBlazorWebView();
 
-		string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "LibraryManagement.db");
-		Console.WriteLine($"{dbPath}");
-        builder.Services.AddSingleton<IBookService>(s => new BookService(dbPath));
-        builder.Services.AddSingleton<IMemberService>(s => new MemberService(dbPath));
-        builder.Services.AddSingleton<ILoanService>(s => new LoanService(dbPath));
+        builder.Services.AddSingleton(new DatabaseConfig("LibraryManagement.db"));
+
+        builder.Services.AddSingleton<IBookService>(s => new BookService(s.GetRequiredService<DatabaseConfig>().dbPath));
+        builder.Services.AddSingleton<IMemberService>(s => new MemberService(s.GetRequiredService<DatabaseConfig>().dbPath));
+        builder.Services.AddSingleton<ILoanService>(s => new LoanService(s.GetRequiredService<DatabaseConfig>().dbPath));
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

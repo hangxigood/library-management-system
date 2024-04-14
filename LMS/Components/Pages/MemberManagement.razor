@@ -244,8 +244,20 @@ else
     // Confirm deletion of a member
     private void ConfirmDelete(Member member)
     {
-        confirmingMember = member;
-        errorDeletionMessage = "";
+        try
+        {
+            if (member.NumberOfLoans > 0)
+            {
+                throw new InvalidOperationException("This member has unreturned books");
+            }
+            confirmingMember = member;
+            errorDeletionMessage = "";
+        }
+        catch (Exception ex)
+        {
+            errorDeletionMessage = "Failed to delete member: " + ex.Message;
+        }
+        
     }
 
     // Execute deletion of a member
@@ -253,10 +265,6 @@ else
     {
         try
         {
-            if (member.NumberOfLoans > 0)
-            {
-                throw new InvalidOperationException("This member has unreturned books");
-            }
             await MemberService.RemoveMember(member.Id);
             await FetchMembers();
             if (editingMember.Id == member.Id)

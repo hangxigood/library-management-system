@@ -4,9 +4,9 @@ using System.IO;
 
 public class DatabaseConfig
 {
-    private readonly string dbPath;
+    public readonly string dbPath;
 
-    public DatabaseConfig(string databaseFileName = "LibraryManagement.db")
+    public DatabaseConfig(string databaseFileName)
     {
         // Builds the database path.
         var folderPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
