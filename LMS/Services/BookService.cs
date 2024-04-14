@@ -25,6 +25,7 @@ public class BookService : IBookService
 
     public async Task AddBook(Book newBook)
     {
+        newBook.AvailableCopies = newBook.TotalCopies;
         await db.InsertAsync(newBook);
     }
     public async Task<List<Book>> GetBooksAsync()

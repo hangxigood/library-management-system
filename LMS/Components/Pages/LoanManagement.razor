@@ -6,12 +6,13 @@
 <h4>Current Loans</h4>
 <!-- Search and Filter Loans -->
 <div>
-    <input type="text" @bind="searchTerm" placeholder="Search by Member or Book ID..." />
+    <input type="text" @bind="searchTerm" placeholder="Search by Member Email or Book Title..." />
     <button @onclick="SearchLoans">Search</button>
+    <span> @searchResults.Count results </span>
 </div>
 
 <!-- Loans Table -->
-@if (loanResults != null && loanResults.Count > 0)
+@if (searchResults != null && searchResults.Count > 0)
 {
     <table class="table">
         <thead>
@@ -25,7 +26,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var loan in loanResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
+            @foreach (var loan in searchResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
             {
                 <tr>
                     <td>@loan.BookTitle</td>
@@ -41,7 +42,7 @@
             }
         </tbody>
     </table>
-    @if (loanResults.Count > pageSize)
+    @if (searchResults.Count > pageSize)
     {
     <div>
         <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
@@ -59,27 +60,34 @@ else
     <DataAnnotationsValidator />
     <ValidationSummary />
     <div class="form-group">
-        <label for="bookId">Book ID:</label>
-        <InputNumber id="bookId" class="form-control" @bind-Value="newLoan.BookId" />
+        <label for="bookISBN">Book ISBN:</label>
+        <InputText id="bookISBN" class="form-control" @bind-Value="newLoan.BookISBN" />
     </div>
     <div class="form-group">
-        <label for="memberId">Member ID:</label>
-        <InputNumber id="memberId" class="form-control" @bind-Value="newLoan.MemberId" />
+        <label for="memberEmail">Member Email:</label>
+        <InputText id="memberEmail" class="form-control" @bind-Value="newLoan.MemberEmail" />
     </div>
-    <div class="form-group">
-        <label for="dueDate">Due Date:</label>
-        <InputDate id="dueDate" class="form-control" @bind-Value="newLoan.DueDate" />
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Add Loan</button>
     </div>
-    <button type="submit" class="btn btn-primary">Add Loan</button>
 </EditForm>
+    @if (!string.IsNullOrEmpty(validationMessage))
+    {
+        <div class="alert alert-danger">@validationMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
 
 @code {
     private Loan newLoan = new Loan();
-    private List<Loan> loanResults = new List<Loan>();
+    private List<Loan> searchResults = new List<Loan>();
     private string searchTerm;
     private string validationMessage;
+    private string successMessage;
     private int currentPage = 1;
-    private int pageSize = 5; 
+    private int pageSize = 8; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,17 +98,18 @@ else
         try
         {
             var loans = await LoanService.GetLoansAsync();
-            loanResults = loans.ToList();
+            searchResults = loans.ToList();
         }
         catch (Exception ex)
         {
             validationMessage = $"Error fetching books: {ex.Message}";
+            Console.WriteLine(validationMessage);
         }
     }
 
     // Pagination helpers
     private bool IsFirstPage() => currentPage == 1;
-    private bool IsLastPage() => (currentPage * pageSize) >= loanResults.Count;
+    private bool IsLastPage() => (currentPage * pageSize) >= searchResults.Count;
     private void PrevPage()
     {
         if (!IsFirstPage())
@@ -113,9 +122,20 @@ else
     }
     private async Task AddLoan()
     {
-        await LoanService.AddLoan(newLoan);
-        newLoan = new Loan(); // Reset the form
-        await FetchLoans();
+        try
+        {
+            await LoanService.AddLoan(newLoan);
+            newLoan = new Loan(); // Reset the form
+            await FetchLoans();
+            successMessage = "Loan added successfully.";
+        }
+        catch (Exception ex)
+        {
+            validationMessage = "Failed to add loan: " + ex.Message;
+        }
+        StateHasChanged(); // Ensure UI update
+        await Task.Delay(3000);
+        ClearMessages();
     }
     private async Task ReturnLoan(Loan returnLoan)
     {
@@ -124,8 +144,32 @@ else
 
     private async Task SearchLoans()
     {
-        // Implement search logic based on the searchTerm, similar to your member search
-        // Reset states as needed
+        try
+        {
+            var loans = await LoanService.GetLoansAsync();
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchResults = loans.ToList();
+            }
+            else
+            {
+                searchResults = loans.Where(b => b.BookTitle.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.MemberName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.MemberEmail.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.BookISBN.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            validationMessage = "";
+        }
+        catch (Exception ex)
+        {
+            validationMessage = "Search failed: " + ex.Message;
+        }
+    }
+
+    private void ClearMessages()
+    {
+        validationMessage = string.Empty;
+        successMessage = string.Empty;
     }
 
 }

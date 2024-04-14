@@ -65,7 +65,7 @@ else
                     <p><strong>Email:</strong> @confirmingMember.Email</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" @onclick="() => DeleteMember(confirmingMember.Id)">Delete</button>
+                    <button type="button" class="btn btn-danger" @onclick="() => DeleteMember(confirmingMember)">Delete</button>
                     <button type="button" class="btn btn-secondary" @onclick="() => confirmingMember = null">Cancel</button>
                 </div>
             </div>
@@ -249,13 +249,17 @@ else
     }
 
     // Execute deletion of a member
-    private async Task DeleteMember(int Id)
+    private async Task DeleteMember(Member member)
     {
         try
         {
-            await MemberService.RemoveMember(Id);
+            if (member.NumberOfLoans > 0)
+            {
+                throw new InvalidOperationException("This member has unreturned books");
+            }
+            await MemberService.RemoveMember(member.Id);
             await FetchMembers();
-            if (editingMember.Id == Id)
+            if (editingMember.Id == member.Id)
             {
                 ResetForm();
             }

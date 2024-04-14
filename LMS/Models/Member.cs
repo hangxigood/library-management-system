@@ -15,4 +15,8 @@ public class Member
     [Unique]
     [RegularExpression(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$", ErrorMessage = "Invalid Email format.")]
     public string Email { get; set; }
+
+    [Ignore]
+    public int NumberOfLoans { get; set; }
+
 }

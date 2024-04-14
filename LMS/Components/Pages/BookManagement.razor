@@ -5,10 +5,10 @@
 <div>
     <input type="text" @bind="searchTerm" placeholder="Search books..." />
     <button @onclick="SearchBooks">Search</button>
-    <span> @searchBookResults.Count results </span>
+    <span> @searchResults.Count results </span>
 </div>
 
-@if (searchBookResults != null && searchBookResults.Count > 0)
+@if (searchResults != null && searchResults.Count > 0)
 {
     <table class="table">
         <thead>
@@ -22,7 +22,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var book in searchBookResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
+            @foreach (var book in searchResults.Skip((currentPage - 1) * pageSize).Take(pageSize))
             {
                 <tr>
                     <td>@book.Title</td>
@@ -38,7 +38,7 @@
             }
         </tbody>
     </table>
-    @if (searchBookResults.Count > pageSize)
+    @if (searchResults.Count > pageSize)
     {
     <div>
         <button class="btn btn-link" disabled="@IsFirstPage()" @onclick="PrevPage">Previous</button>
@@ -120,7 +120,7 @@ else
     // Class fields
     private Book editingBook = new Book();
     private Book originalBook; // Used to store the original data when editing begins
-    private List<Book> searchBookResults = new List<Book>();
+    private List<Book> searchResults = new List<Book>();
     private string searchTerm;
     private Book confirmingBook; // Store the book to be potentially deleted
     private string validationMessage;
@@ -143,7 +143,7 @@ else
         try
         {
             var books = await BookService.GetBooksAsync();
-            searchBookResults = books.ToList();
+            searchResults = books.ToList();
         }
         catch (Exception ex)
         {
@@ -153,7 +153,7 @@ else
 
     // Pagination helpers
     private bool IsFirstPage() => currentPage == 1;
-    private bool IsLastPage() => (currentPage * pageSize) >= searchBookResults.Count;
+    private bool IsLastPage() => (currentPage * pageSize) >= searchResults.Count;
     private void PrevPage()
     {
         if (!IsFirstPage())
@@ -173,12 +173,13 @@ else
             var books = await BookService.GetBooksAsync();
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                searchBookResults = books.ToList();
+                searchResults = books.ToList();
             }
             else
             {
-                searchBookResults = books.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-                                                    || b.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                searchResults = books.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.ISBN.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
             }
             errorDeletionMessage = "";
         }
