@@ -107,7 +107,29 @@ public class DatabaseConfig
         // Example data for Loans
         var loans = new List<Loan>
         {
-            new Loan { BookId = 2, MemberId = 1, CheckoutDate = DateTime.Now.AddDays(-10), DueDate = DateTime.Now.AddDays(20) }
+            new Loan { Id = 1, BookId = 2, MemberId = 1, CheckoutDate = DateTime.Today.AddDays(-10), DueDate = DateTime.Today.AddDays(20), ReturnDate = null },
+            new Loan { Id = 2, BookId = 2, MemberId = 2, CheckoutDate = DateTime.Today.AddDays(-5), DueDate = DateTime.Today.AddDays(25), ReturnDate = null },
+            new Loan { Id = 3, BookId = 4, MemberId = 3, CheckoutDate = DateTime.Today.AddDays(-3), DueDate = DateTime.Today.AddDays(27), ReturnDate = null },
+            new Loan { Id = 13, BookId = 7, MemberId = 13, CheckoutDate = DateTime.Today.AddDays(-7), DueDate = DateTime.Today.AddDays(23), ReturnDate = null},
+            new Loan { Id = 4, BookId = 8, MemberId = 4, CheckoutDate = DateTime.Today.AddDays(-15), DueDate = DateTime.Today.AddDays(15), ReturnDate = null },
+            new Loan { Id = 5, BookId = 8, MemberId = 5, CheckoutDate = DateTime.Today.AddDays(-20), DueDate = DateTime.Today.AddDays(10), ReturnDate = null },
+            new Loan { Id = 6, BookId = 9, MemberId = 6, CheckoutDate = DateTime.Today.AddDays(-30), DueDate = DateTime.Today.AddDays(0), ReturnDate = null },
+            new Loan { Id = 7, BookId = 12, MemberId = 7, CheckoutDate = DateTime.Today.AddDays(-8), DueDate = DateTime.Today.AddDays(22), ReturnDate = null },
+            new Loan { Id = 8, BookId = 13, MemberId = 8, CheckoutDate = DateTime.Today.AddDays(-18), DueDate = DateTime.Today.AddDays(12), ReturnDate = null },
+            new Loan { Id = 9, BookId = 16, MemberId = 9, CheckoutDate = DateTime.Today.AddDays(-25), DueDate = DateTime.Today.AddDays(5), ReturnDate = null },
+            new Loan { Id = 10, BookId = 17, MemberId = 10, CheckoutDate = DateTime.Today.AddDays(-12), DueDate = DateTime.Today.AddDays(18), ReturnDate = null },
+            new Loan { Id = 11, BookId = 21, MemberId = 11, CheckoutDate = DateTime.Today.AddDays(-11), DueDate = DateTime.Today.AddDays(19), ReturnDate = null },
+            new Loan { Id = 12, BookId = 22, MemberId = 12, CheckoutDate = DateTime.Today.AddDays(-13), DueDate = DateTime.Today.AddDays(17), ReturnDate = null },
+            new Loan { Id = 14, BookId = 3, MemberId = 14, CheckoutDate = DateTime.Today.AddDays(-30), DueDate = DateTime.Today.AddDays(-10), ReturnDate = DateTime.Today.AddDays(-9) },
+            new Loan { Id = 15, BookId = 5, MemberId = 15, CheckoutDate = DateTime.Today.AddDays(-60), DueDate = DateTime.Today.AddDays(-30), ReturnDate = DateTime.Today.AddDays(-29) },
+            new Loan { Id = 16, BookId = 11, MemberId = 16, CheckoutDate = DateTime.Today.AddDays(-45), DueDate = DateTime.Today.AddDays(-15), ReturnDate = DateTime.Today.AddDays(-14) },
+            new Loan { Id = 17, BookId = 20, MemberId = 17, CheckoutDate = DateTime.Today.AddDays(-20), DueDate = DateTime.Today.AddDays(0), ReturnDate = DateTime.Today.AddDays(1) },
+            new Loan { Id = 18, BookId = 8, MemberId = 18, CheckoutDate = DateTime.Today.AddDays(-25), DueDate = DateTime.Today.AddDays(-5), ReturnDate = DateTime.Today.AddDays(-4) },
+            new Loan { Id = 19, BookId = 1, MemberId = 19, CheckoutDate = DateTime.Today.AddDays(-15), DueDate = DateTime.Today.AddDays(5), ReturnDate = DateTime.Today.AddDays(6) },
+            new Loan { Id = 20, BookId = 6, MemberId = 20, CheckoutDate = DateTime.Today.AddDays(-10), DueDate = DateTime.Today.AddDays(10), ReturnDate = DateTime.Today.AddDays(11) },
+            new Loan { Id = 21, BookId = 14, MemberId = 21, CheckoutDate = DateTime.Today.AddDays(-35), DueDate = DateTime.Today.AddDays(-5), ReturnDate = DateTime.Today.AddDays(-4) },
+            new Loan { Id = 22, BookId = 9, MemberId = 22, CheckoutDate = DateTime.Today.AddDays(-50), DueDate = DateTime.Today.AddDays(-20), ReturnDate = DateTime.Today.AddDays(-19) },
+            new Loan { Id = 23, BookId = 12, MemberId = 23, CheckoutDate = DateTime.Today.AddDays(-40), DueDate = DateTime.Today.AddDays(-10), ReturnDate = DateTime.Today.AddDays(-9) }
         };
         db.InsertAll(loans);
     }

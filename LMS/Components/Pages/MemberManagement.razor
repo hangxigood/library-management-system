@@ -3,7 +3,7 @@
 
 <h4>Search and List Members</h4>
 <div>
-    <input type="text" @bind="searchMemberTerm" placeholder="Search members..." />
+    <input type="text" @bind="searchTerm" placeholder="Search members..." />
     <button @onclick="SearchMembers">Search</button>
     <span> @searchMemberResults.Count results </span>
 </div>
@@ -104,7 +104,7 @@ else
     private Member editingMember = new Member();
     private Member originalMember; // Used to store the original data when editing begins
     private List<Member> searchMemberResults = new List<Member>();
-    private string searchMemberTerm;
+    private string searchTerm;
     private Member confirmingMember; // Store the member to be potentially deleted
     private string validationMessage;
     private string successMessage;
@@ -154,14 +154,14 @@ else
         try
         {
             var members = await MemberService.GetMembersAsync();
-            if (string.IsNullOrWhiteSpace(searchMemberTerm))
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchMemberResults = members.ToList();
             }
             else
             {
-                searchMemberResults = members.Where(b => b.Name.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)
-                                                    || b.Email.Contains(searchMemberTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                searchMemberResults = members.Where(b => b.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
             }
             errorDeletionMessage = "";
         }

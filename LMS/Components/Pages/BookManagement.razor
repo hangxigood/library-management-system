@@ -3,7 +3,7 @@
 
 <h4>Search and List Books</h4>
 <div>
-    <input type="text" @bind="searchBookTerm" placeholder="Search books..." />
+    <input type="text" @bind="searchTerm" placeholder="Search books..." />
     <button @onclick="SearchBooks">Search</button>
     <span> @searchBookResults.Count results </span>
 </div>
@@ -121,7 +121,7 @@ else
     private Book editingBook = new Book();
     private Book originalBook; // Used to store the original data when editing begins
     private List<Book> searchBookResults = new List<Book>();
-    private string searchBookTerm;
+    private string searchTerm;
     private Book confirmingBook; // Store the book to be potentially deleted
     private string validationMessage;
     private string successMessage;
@@ -171,14 +171,14 @@ else
         try
         {
             var books = await BookService.GetBooksAsync();
-            if (string.IsNullOrWhiteSpace(searchBookTerm))
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchBookResults = books.ToList();
             }
             else
             {
-                searchBookResults = books.Where(b => b.Title.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)
-                                                    || b.Author.Contains(searchBookTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                searchBookResults = books.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                                                    || b.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
             }
             errorDeletionMessage = "";
         }
