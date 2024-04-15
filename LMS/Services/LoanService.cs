@@ -40,11 +40,6 @@ public class LoanService : ILoanService
         {
             throw new InvalidOperationException("This book is not available.");
         }
-        else
-        {
-            book.AvailableCopies -= 1;  // Decrement the number of available copies
-            await db.UpdateAsync(book);  // Update the book record
-        }
 
         // Retrieve the member based on Email
         var member = await db.Table<Member>().Where(m => m.Email == loan.MemberEmail).FirstOrDefaultAsync();
@@ -62,8 +57,9 @@ public class LoanService : ILoanService
             DueDate = DateTime.Now.AddDays(14)  // Setting the due date 2 weeks from now
         };
 
-        // Insert the new loan into the database
-        await db.InsertAsync(newLoan);
+        book.AvailableCopies -= 1;  // Decrement the number of available copies
+        await db.UpdateAsync(book);  // Update the book record
+        await db.InsertAsync(newLoan); // Insert the new loan into the database
     }
 
     // Retrieves all loans and their associated book and member details
