@@ -1,5 +1,7 @@
 ﻿@page "/loan_management"
 @inject ILoanService LoanService
+@inject IBookService BookService
+@inject IMemberService MemberService
 
 <PageTitle>Loan Management</PageTitle>
 
@@ -7,7 +9,7 @@
 <h4>Current Loans</h4>
 <!-- Search and filter functionality for loans -->
 <div>
-    <input type="text" @bind="searchTerm" placeholder="Search by Member Email or Book Title..." />
+    <input type="text" @bind="searchTerm" placeholder="Enter name, email or book" />
     <button @onclick="SearchLoans">Search</button>
     <span> @searchResults.Count results </span> <!-- Display the count of search results -->
 </div>
@@ -62,19 +64,36 @@ else
 
 <!-- Form for adding new loans -->
 <h4>Add New Loan</h4>
+<p style="color: red; font-size: small;">* All loans are to be returned within 30 days</p>
 <EditForm Model="@newLoan" OnValidSubmit="AddLoan">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <!-- Input for Book ISBN -->
+    
+    <!-- Dropdown for Book List -->
     <div class="form-group">
-        <label for="bookISBN">Book ISBN:</label>
-        <InputText id="bookISBN" class="form-control" @bind-Value="newLoan.BookISBN" />
+        <label for="bookTitle">Book Title:</label>
+        <select class="form-control" @bind="@newLoan.BookISBN">
+            <option value="">Select Book</option>
+            @foreach (var book in searchBooks.OrderBy(b => b.Title))
+            {
+                <option value="@book.ISBN">@book.Title (@book.ISBN)</option>
+            }
+        </select>
     </div>
-    <!-- Input for Member Email -->
+
+    <!-- Dropdown for Member List -->
     <div class="form-group">
-        <label for="memberEmail">Member Email:</label>
-        <InputText id="memberEmail" class="form-control" @bind-Value="newLoan.MemberEmail" />
+        <label for="memberName">Member Name:</label>
+        <select class="form-control" @bind="@newLoan.MemberEmail">
+            <option value="">Select Member</option>
+            @foreach (var member in searchMembers.OrderBy(m => m.Name))
+            {
+                <option value="@member.Email">@member.Name (@member.Email)</option>
+            }
+        </select>
     </div>
+
+
     <div class="form-group mt-3">
         <button type="submit" class="btn btn-primary">Add Loan</button> <!-- Submit button for the form -->
     </div>
@@ -93,6 +112,8 @@ else
     // Fields to hold form and search data
     private Loan newLoan = new Loan();
     private List<Loan> searchResults = new List<Loan>();
+    private List<Book> searchBooks = new List<Book>();
+    private List<Member> searchMembers = new List<Member>();
     private string searchTerm;
     private string validationMessage;
     private string successMessage;
@@ -103,6 +124,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         await FetchLoans();
+        await FetchBooks();
+        await FetchMembers();
     }
 
     // Method to fetch all loans and handle exceptions
@@ -112,6 +135,35 @@ else
         {
             var loans = await LoanService.GetLoansAsync();
             searchResults = loans.ToList();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"Error fetching books: {ex.Message}";
+            Console.WriteLine(validationMessage);
+        }
+    }
+
+    // Method to fetch all books and handle exceptions
+    private async Task FetchBooks()
+    {
+        try
+        {
+            var books = await BookService.GetBooksAsync();
+            searchBooks = books.ToList();
+        }
+        catch (Exception ex)
+        {
+            validationMessage = $"Error fetching books: {ex.Message}";
+        }
+    }
+
+    // Method to fetch all loans and handle exceptions
+    private async Task FetchMembers()
+    {
+        try
+        {
+            var members = await MemberService.GetMembersAsync();
+            searchMembers = members.ToList();
         }
         catch (Exception ex)
         {

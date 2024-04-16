@@ -1,9 +1,9 @@
-﻿@page "/"
+﻿@page "/book_management"
 @inject IBookService BookService
 
 <h4>Search and List Books</h4>
 <div>
-    <input type="text" @bind="searchTerm" placeholder="Search books..." />
+    <input type="text" @bind="searchTerm" placeholder="Enter title, author or ISBN" />
     <button @onclick="SearchBooks">Search</button>
     <span> @searchResults.Count results </span>
 </div>

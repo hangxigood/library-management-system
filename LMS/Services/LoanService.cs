@@ -54,7 +54,7 @@ public class LoanService : ILoanService
             BookId = book.Id,
             MemberId = member.Id,
             CheckoutDate = DateTime.Now,
-            DueDate = DateTime.Now.AddDays(14)  // Setting the due date 2 weeks from now
+            DueDate = DateTime.Now.AddDays(30)  // Setting the due date 30 days from now
         };
 
         book.AvailableCopies -= 1;  // Decrement the number of available copies
