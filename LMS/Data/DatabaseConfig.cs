@@ -18,10 +18,21 @@ public class DatabaseConfig
     {
         using (var db = new SQLiteConnection(dbPath))
         {
+            // Check if tables exist and are not empty
+            if (db.ExecuteScalar<int>("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('Loan', 'Member', 'Book')") == 3
+                && db.ExecuteScalar<int>("SELECT COUNT(*) FROM Loan") > 0
+                && db.ExecuteScalar<int>("SELECT COUNT(*) FROM Member") > 0
+                && db.ExecuteScalar<int>("SELECT COUNT(*) FROM Book") > 0)
+            {
+                // Tables exist and are not empty, no need to reset
+                return;
+            }
+
             // Drop tables if they exist to reset the database on each build
             db.DropTable<Loan>();
             db.DropTable<Member>();
             db.DropTable<Book>();
+
             // Create tables based on models
             db.CreateTable<Book>();
             db.CreateTable<Member>();
@@ -31,6 +42,7 @@ public class DatabaseConfig
             SeedDatabase(db);
         }
     }
+
 
     public string GetDatabasePath()
     {
