@@ -1,0 +1,21 @@
+@page "/addbook"
+@inject LibraryDatabase LibraryDatabase
+
+<h3>Add a New Book</h3>
+
+@code {
+    Book NewBook = new Book();
+
+    private async Task AddNewBook()
+    {
+        await LibraryDatabase.SaveBookAsync(NewBook);
+    }
+}
+
+<EditForm Model="@NewBook" OnValidSubmit="@AddNewBook">
+    <InputText @bind-Value="NewBook.Title" />
+    <InputText @bind-Value="NewBook.Author" />
+    <InputNumber @bind-Value="NewBook.YearPublished" />
+    <input type="checkbox" @bind="@NewBook.IsAvailable" />
+    <button type="submit">Add Book</button>
+</EditForm>

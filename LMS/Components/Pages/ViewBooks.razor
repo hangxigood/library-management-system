@@ -1,0 +1,42 @@
+@page "/viewbooks"
+@inject LibraryDatabase LibraryDatabase
+
+<h3>View Books</h3>
+
+@if (Books != null)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Year Published</th>
+                <th>Available</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in Books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.Author</td>
+                    <td>@book.YearPublished</td>
+                    <td>@(book.IsAvailable ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No books available.</p>
+}
+
+@code {
+    List<Book> Books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Books = await LibraryDatabase.GetBooksAsync();
+    }
+}
